@@ -1,29 +1,55 @@
-name: CMake CI
-
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-
 jobs:
   build:
-    runs-on: ubuntu-latest
-
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install compiler and build tools
-        run: sudo apt-get update && sudo apt-get install -y gcc g++ cmake ninja-build
+      - name: Install GCC 14
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-14 g++-14
 
-      - name: Install Boost
-        run: sudo apt-get install -y libboost-filesystem-dev
+      - name: Set GCC 14 as default
+        run: |
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 100
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-14 100
 
-      - name: Configure CMake
-        run: cmake -S . -B build -G Ninja -DUSE_FETCHCONTENT=ON
+      - name: Check GCC version
+        run: gcc --version
 
-      - name: Build
-        run: cmake --build build
+      # Now build your project as usual!
+      - name: Build project
+        run: |
+          gcc --version     # will show GCC 14.x
+          make build        # or cmake, or your build script
 
-      - name: Test
-        run: ctest --test-dir build --output-on-failure
+
+# name: CMake CI
+
+# on:
+#   push:
+#     branches: [ main ]
+#   pull_request:
+#     branches: [ main ]
+
+# jobs:
+#   build:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - uses: actions/checkout@v4
+
+#       - name: Install compiler and build tools
+#         run: sudo apt-get update && sudo apt-get install -y gcc g++ cmake ninja-build
+
+#       - name: Install Boost
+#         run: sudo apt-get install -y libboost-filesystem-dev
+
+#       - name: Configure CMake
+#         run: cmake -S . -B build -G Ninja -DUSE_FETCHCONTENT=ON
+
+#       - name: Build
+#         run: cmake --build build
+
+#       - name: Test
+#         run: ctest --test-dir build --output-on-failure

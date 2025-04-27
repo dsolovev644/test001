@@ -30,3 +30,16 @@
 *.exe
 *.out
 *.app
+
+# Binaries
+/build/
+/out/
+/bin/
+/*.exe
+/*.obj
+/.vs
+/CMakeFiles
+/CMakeCache.txt
+*.log
+*.user
+*.ninja

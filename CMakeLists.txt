@@ -5,7 +5,7 @@ project(test001 VERSION 0.1.0 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Boost 1.84 REQUIRED COMPONENTS filesystem)
+find_package(Boost 1.83 REQUIRED COMPONENTS filesystem)
 
 # Library with shared code
 add_library(test001_lib

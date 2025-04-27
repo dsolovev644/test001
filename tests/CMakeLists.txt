@@ -1,4 +1,5 @@
 add_executable(test_test001 test_main.cpp)
-target_link_libraries(test_test001 PRIVATE test001_lib gtest gtest_main)
+target_link_libraries(test_test001 PRIVATE test001_lib GTest::gtest GTest::gtest_main)
 
-add_test(NAME myproject_test COMMAND test_test001)
+include(GoogleTest)
+gtest_discover_tests(test_test001)

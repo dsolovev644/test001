@@ -20,7 +20,7 @@ jobs:
         run: sudo apt-get install -y libboost-filesystem-dev
 
       - name: Configure CMake
-        run: cmake -S . -B build -G Ninja
+        run: cmake -S . -B build -G Ninja -DUSE_FETCHCONTENT=ON
 
       - name: Build
         run: cmake --build build

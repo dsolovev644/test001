@@ -35,6 +35,7 @@
 /build/
 /out/
 /bin/
+/.vscode/
 /*.exe
 /*.obj
 /.vs

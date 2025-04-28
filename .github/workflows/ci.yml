@@ -25,16 +25,9 @@ jobs:
 
       - name: Install GCC 14
         run: |
+          set -e # Exit immediately if a command exits with a non-zero status.
           sudo apt-get update
           sudo apt-get install -y gcc-14 g++-14 cmake ninja-build wget unzip
-
-      - name: Set GCC 14 as default
-        run: |
-          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 100
-          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-14 100
-
-      - name: Check GCC version
-        run: ${CXX} --version
 
       # -------- BOOST --------
       - name: Cache Boost
@@ -47,6 +40,7 @@ jobs:
       - name: Build Boost 1.88
         if: steps.cache-boost.outputs.cache-hit != 'true'
         run: |
+          set -e # Exit immediately if a command exits with a non-zero status.
           mkdir -p $BOOST_ROOT
           wget -q https://archives.boost.io/release/1.88.0/source/boost_1_88_0.tar.bz2
           tar --bzip2 -xf boost_1_88_0.tar.bz2
@@ -54,6 +48,7 @@ jobs:
           ./bootstrap.sh --prefix=$BOOST_ROOT
           ./b2 install
           cd ..
+          rm -rf boost_1_88_0 boost_1_88_0.tar.bz2
 
       # -------- SPDLOG --------
       - name: Cache spdlog
@@ -66,6 +61,7 @@ jobs:
       - name: Build spdlog 1.15.2
         if: steps.cache-spdlog.outputs.cache-hit != 'true'
         run: |
+          set -e # Exit immediately if a command exits with a non-zero status.
           mkdir -p deps
           cd deps
           wget -q https://github.com/gabime/spdlog/archive/refs/tags/v1.15.2.zip
@@ -74,7 +70,8 @@ jobs:
           mkdir build && cd build
           cmake .. -DCMAKE_INSTALL_PREFIX=$SPDLOG_ROOT -DCMAKE_BUILD_TYPE=Release
           cmake --build . --target install
-          cd ../../../
+          cd ../../
+          rm -rf spdlog-1.15.2 v1.15.2.zip && cd ..
 
       # -------- GTEST --------
       - name: Cache gtest
@@ -87,6 +84,7 @@ jobs:
       - name: Build gtest 1.16.0
         if: steps.cache-gtest.outputs.cache-hit != 'true'
         run: |
+          set -e # Exit immediately if a command exits with a non-zero status.
           mkdir -p deps
           cd deps
           wget -q https://github.com/google/googletest/archive/refs/tags/v1.16.0.zip
@@ -95,10 +93,12 @@ jobs:
           mkdir build && cd build
           cmake .. -DCMAKE_INSTALL_PREFIX=$GTEST_ROOT -DCMAKE_POSITION_INDEPENDENT_CODE=ON
           cmake --build . --target install
-          cd ../../../
+          cd ../../
+          rm -rf googletest-1.16.0 v1.16.0.zip && cd ..
 
       - name: Configure CMake
         run: |
+          set -e # Exit immediately if a command exits with a non-zero status.
           cmake -S . -B build -G Ninja \
             -DCMAKE_PREFIX_PATH="${BOOST_ROOT};${SPDLOG_ROOT};${GTEST_ROOT}" \
             -DBOOST_ROOT=${BOOST_ROOT} \

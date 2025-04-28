@@ -9,13 +9,24 @@ on:
 jobs:
   build:
     runs-on: ubuntu-24.04
+
+    env:
+      CC: gcc-14
+      CXX: g++-14
+      BOOST_VERSION: 1.88.0
+      SPDLOG_VERSION: 1.15.2
+      GTEST_VERSION: 1.16.0
+      BOOST_ROOT: ${{ github.workspace }}/deps/boost
+      SPDLOG_ROOT: ${{ github.workspace }}/deps/spdlog
+      GTEST_ROOT: ${{ github.workspace }}/deps/gtest
+
     steps:
       - uses: actions/checkout@v4
 
       - name: Install GCC 14
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-14 g++-14 cmake ninja-build
+          sudo apt-get install -y gcc-14 g++-14 cmake ninja-build wget unzip
 
       - name: Set GCC 14 as default
         run: |
@@ -23,13 +34,76 @@ jobs:
           sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-14 100
 
       - name: Check GCC version
-        run: gcc --version
+        run: ${CXX} --version
 
-      - name: Install Boost
-        run: sudo apt-get install -y libboost-filesystem-dev
+      # -------- BOOST --------
+      - name: Cache Boost
+        id: cache-boost
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.BOOST_ROOT }}
+          key: boost-${{ env.BOOST_VERSION }}-linux
+
+      - name: Build Boost 1.88
+        if: steps.cache-boost.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p $BOOST_ROOT
+          wget -q https://archives.boost.io/release/1.88.0/source/boost_1_88_0.tar.bz2
+          tar --bzip2 -xf boost_1_88_0.tar.bz2
+          cd boost_1_88_0
+          ./bootstrap.sh --prefix=$BOOST_ROOT
+          ./b2 install
+          cd ..
+
+      # -------- SPDLOG --------
+      - name: Cache spdlog
+        id: cache-spdlog
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.SPDLOG_ROOT }}
+          key: spdlog-${{ env.SPDLOG_VERSION }}-linux
+
+      - name: Build spdlog 1.15.2
+        if: steps.cache-spdlog.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p deps
+          cd deps
+          wget -q https://github.com/gabime/spdlog/archive/refs/tags/v1.15.2.zip
+          unzip -q v1.15.2.zip
+          cd spdlog-1.15.2
+          mkdir build && cd build
+          cmake .. -DCMAKE_INSTALL_PREFIX=$SPDLOG_ROOT -DCMAKE_BUILD_TYPE=Release
+          cmake --build . --target install
+          cd ../../../
+
+      # -------- GTEST --------
+      - name: Cache gtest
+        id: cache-gtest
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.GTEST_ROOT }}
+          key: gtest-${{ env.GTEST_VERSION }}-linux
+
+      - name: Build gtest 1.16.0
+        if: steps.cache-gtest.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p deps
+          cd deps
+          wget -q https://github.com/google/googletest/archive/refs/tags/v1.16.0.zip
+          unzip -q v1.16.0.zip
+          cd googletest-1.16.0
+          mkdir build && cd build
+          cmake .. -DCMAKE_INSTALL_PREFIX=$GTEST_ROOT -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+          cmake --build . --target install
+          cd ../../../
 
       - name: Configure CMake
-        run: cmake -S . -B build -G Ninja -DUSE_FETCHCONTENT=ON
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_PREFIX_PATH="${BOOST_ROOT};${SPDLOG_ROOT};${GTEST_ROOT}" \
+            -DBOOST_ROOT=${BOOST_ROOT} \
+            -DBoost_NO_SYSTEM_PATHS=ON \
+            -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
         run: cmake --build build

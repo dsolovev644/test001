@@ -5,7 +5,7 @@
 #include <spdlog/spdlog.h>
 
 int main() {
-    std::cout << "Hello, Modern C++!\n";
+    std::cout << "Hello, Modern C++2!\n";
     example();
 
     boost::filesystem::path p{"."};
